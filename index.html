@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Economy Collaborators - Rank Synced</title>
+    <title>GitHub Economy Collaborators - Integrated Version</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; overflow: hidden; }
@@ -18,6 +18,10 @@
         .chart-title { margin-bottom: 5px; color: #1f2328; font-size: 22px; font-weight: 600; }
         .sub-header-link { margin-bottom: 15px; font-size: 13px; }
         .sub-header-link a { color: #0969da; text-decoration: none; }
+        
+        /* disclaimer style */
+        .disclaimer { background: #fff8c5; border: 1px solid #d4a72c; padding: 10px 15px; border-radius: 6px; font-size: 12px; color: #24292f; max-width: 800px; margin-bottom: 10px; line-height: 1.5; }
+        
         .filter-item { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 4px; cursor: pointer; color: #24292f; }
         .filter-item:hover { background: #f6f8fa; }
         .val-label { color: #8c959f; font-size: 10px; margin-left: auto; font-family: monospace; }
@@ -60,19 +64,27 @@
     </div>
 
     <div id="main">
-        <h1 class="chart-title">GitHub Economy Collaborators (Customized)</h1>
+        <h1 class="chart-title">GitHub Economy Collaborators</h1>
         <div class="sub-header-link">
             <a href="https://github.com/maabou512/github_economy_collaborators" target="_blank">GitHub Repo and README (Japanese)</a>
         </div>
+
+        <div class="disclaimer">
+            <strong>⚠️ Data Interpretation Note (Double Counting):</strong><br>
+            The "EU" (European Union) value represents the aggregate total of its member countries. When visualizing "EU" alongside individual member states (e.g., DE, FR), the total weight will include redundant values. Please interpret the "Share %" with caution when "EU" is selected.
+        </div>
+
         <div id="viz"></div>
     </div>
     <div id="tooltip"></div>
 
 <script>
-// (isoNames, getLongName, SVG設定などは維持)
-const isoNames = {"AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","EU":"European Union","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Namibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","XK":"Kosovo","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"};
+const isoNames = {"AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","EU":"European Union","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Namibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","XK":"Kosovo","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"};
+
+const getFullDisplayName = (code) => isoNames[code] ? isoNames[code] : code;
 const getLongName = (code) => isoNames[code] ? `${code} (${isoNames[code]})` : code;
-const width = 850, height = 800, outerRadius = 260, innerRadius = 245;
+
+const width = 850, height = 750, outerRadius = 260, innerRadius = 245;
 const svg = d3.select("#viz").append("svg").attr("width", width).attr("height", height).append("g").attr("transform", `translate(${width/2},${height/2})`);
 const tooltip = d3.select("#tooltip");
 
@@ -82,18 +94,13 @@ d3.csv("economy_collaborators.csv").then(data => {
     const select = d3.select("#period-select");
     select.selectAll("option").data(periods).enter().append("option").text(d => d);
 
-    // ★ 現在選択されている相手側に基づく上位コードを返す
-    function getRankedCodes(type, periodStr, oppositeActiveSet) {
+    function getRankedScores(type, periodStr, oppositeActiveSet) {
         const [y, q] = periodStr.split("-Q");
         let filtered = data.filter(d => d.year === y && d.quarter === q);
-        
-        // 相手側が選択されていれば絞り込む
         if (oppositeActiveSet && oppositeActiveSet.size > 0) {
             filtered = filtered.filter(d => type === 'src' ? oppositeActiveSet.has(d.destination) : oppositeActiveSet.has(d.source));
         }
-
-        const scores = d3.rollup(filtered, v => d3.sum(v, d => +d.weight), d => (type === 'src' ? d.source : d.destination));
-        return scores;
+        return d3.rollup(filtered, v => d3.sum(v, d => +d.weight), d => (type === 'src' ? d.source : d.destination));
     }
 
     function renderFilters(type, forceSelectCodes = null) {
@@ -101,61 +108,42 @@ d3.csv("economy_collaborators.csv").then(data => {
         const cls = type + "-chk";
         const oppositeType = type === 'src' ? 'dst' : 'src';
         const periodStr = select.property("value");
-        
-        // 相手方の現在の選択状況を取得
         const oppositeActiveSet = new Set(d3.selectAll(`.${oppositeType}-chk:checked`).nodes().map(n => n.value));
-        const scores = getRankedCodes(type, periodStr, oppositeActiveSet);
-        
-        // 現状のチェック状態を退避
+        const scores = getRankedScores(type, periodStr, oppositeActiveSet);
         const currentChecked = new Set(d3.selectAll(`.${cls}:checked`).nodes().map(n => n.value));
-
         const container = d3.select("#" + containerId);
         const searchVal = d3.select(`#${type}-search`).property("value").toLowerCase();
         
         const sorted = [...allCountries].sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0) || a.localeCompare(b));
         
         container.selectAll(".filter-item").remove();
-        const items = container.selectAll(".filter-item").data(sorted).enter().append("label")
+        container.selectAll(".filter-item").data(sorted).enter().append("label")
             .attr("class", "filter-item")
             .style("display", d => {
                 const fullName = (isoNames[d] || "").toLowerCase();
                 return (d.toLowerCase().includes(searchVal) || fullName.includes(searchVal)) ? "flex" : "none";
+            })
+            .each(function(d) {
+                const label = d3.select(this);
+                label.append("input").attr("type", "checkbox").attr("class", cls).attr("value", d)
+                     .property("checked", forceSelectCodes ? forceSelectCodes.includes(d) : currentChecked.has(d))
+                     .on("change", () => { renderFilters(oppositeType); updateChart(); });
+                label.append("span").text(getLongName(d));
+                label.append("span").attr("class", "val-label").text(scores.has(d) ? d3.format(".2s")(scores.get(d)) : "");
             });
-
-        items.append("input").attr("type", "checkbox").attr("class", cls).attr("value", d => d)
-             .property("checked", d => {
-                 if (forceSelectCodes) return forceSelectCodes.includes(d);
-                 return currentChecked.has(d);
-             })
-             .on("change", () => {
-                 // 自分が変わったら相手のランキングを更新
-                 renderFilters(oppositeType);
-                 updateChart();
-             });
-
-        items.append("span").text(d => getLongName(d));
-        items.append("span").attr("class", "val-label").text(d => scores.has(d) ? d3.format(".2s")(scores.get(d)) : "");
     }
 
-    // ★ Top 15ボタン
     window.smartSelectTop15 = (type) => {
-        const periodStr = select.property("value");
-        const oppositeType = type === 'src' ? 'dst' : 'src';
-        const oppositeActiveSet = new Set(d3.selectAll(`.${oppositeType}-chk:checked`).nodes().map(n => n.value));
-        
-        const scores = getRankedCodes(type, periodStr, oppositeActiveSet);
+        const scores = getRankedScores(type, select.property("value"), new Set(d3.selectAll(`.${type==='src'?'dst':'src'}-chk:checked`).nodes().map(n => n.value)));
         const top15 = Array.from(scores.entries()).sort((a,b)=>b[1]-a[1]).slice(0, 15).map(d=>d[0]);
-        
         renderFilters(type, top15);
-        renderFilters(oppositeType); // 相手のスコアも再計算
+        renderFilters(type==='src'?'dst':'src');
         updateChart();
     };
 
     window.toggleVisible = (type, state) => {
-        d3.select(`#${type}-filters`).selectAll(".filter-item").filter(function() {
-            return d3.select(this).style("display") !== "none";
-        }).select("input").property("checked", state);
-        renderFilters(type === 'src' ? 'dst' : 'src');
+        d3.select(`#${type}-filters`).selectAll(".filter-item").filter(function() { return d3.select(this).style("display") !== "none"; }).select("input").property("checked", state);
+        renderFilters(type==='src'?'dst':'src');
         updateChart();
     };
 
@@ -167,32 +155,26 @@ d3.csv("economy_collaborators.csv").then(data => {
         });
     };
 
-    select.on("change", () => {
-        renderFilters('src');
-        renderFilters('dst');
-        updateChart();
-    });
+    select.on("change", () => { renderFilters('src'); renderFilters('dst'); updateChart(); });
 
-    // 初回起動：全体Top15をセット
+    // Initial load: Set Top 15 globally
     const [y, q] = periods[0].split("-Q");
-    const initialScores = d3.rollup(data.filter(d => d.year === y && d.quarter === q), v => d3.sum(v, d => +d.weight), d => d.source);
-    const initialTop15 = Array.from(initialScores.entries()).sort((a,b)=>b[1]-a[1]).slice(0, 15).map(d=>d[0]);
+    const initTop = Array.from(d3.rollup(data.filter(d => d.year === y && d.quarter === q), v => d3.sum(v, d => +d.weight), d => d.source).entries())
+                        .sort((a,b)=>b[1]-a[1]).slice(0, 15).map(d=>d[0]);
     
-    renderFilters('src', initialTop15);
-    renderFilters('dst', initialTop15);
-    updateChart();
+    renderFilters('src', initTop); renderFilters('dst', initTop); updateChart();
 
     function updateChart() {
         svg.selectAll("*").remove();
         const [y, q] = select.property("value").split("-Q");
-        const activeSrc = new Set(d3.selectAll(".src-chk:checked").nodes().map(n => n.value));
-        const activeDst = new Set(d3.selectAll(".dst-chk:checked").nodes().map(n => n.value));
+        const actSrc = new Set(d3.selectAll(".src-chk:checked").nodes().map(n => n.value));
+        const actDst = new Set(d3.selectAll(".dst-chk:checked").nodes().map(n => n.value));
         
-        let filtered = data.filter(d => d.year === y && d.quarter === q && activeSrc.has(d.source) && activeDst.has(d.destination))
+        let filtered = data.filter(d => d.year === y && d.quarter === q && actSrc.has(d.source) && actDst.has(d.destination))
                            .sort((a,b) => +b.weight - +a.weight).slice(0, 120);
 
         if (!filtered.length) return;
-        const totalWeight = d3.sum(filtered, d => +d.weight);
+        const total = d3.sum(filtered, d => +d.weight);
         const nodes = Array.from(new Set([...filtered.map(d => d.source), ...filtered.map(d => d.destination)])).sort();
         const idxMap = new Map(nodes.map((n, i) => [n, i]));
         const matrix = Array.from({length: nodes.length}, () => new Float64Array(nodes.length));
@@ -209,10 +191,11 @@ d3.csv("economy_collaborators.csv").then(data => {
             .attr("d", d3.ribbon().radius(innerRadius)).attr("fill", d => color(nodes[d.source.index])).attr("fill-opacity", 0.6)
             .attr("stroke", d => d3.rgb(color(nodes[d.source.index])).darker())
             .on("mouseover", (e, d) => {
-                const share = (d.source.value / totalWeight) * 100;
+                const share = (d.source.value / total) * 100;
                 tooltip.style("visibility", "visible").html(`
-                    <div style="font-weight:bold;">${isoNames[nodes[d.source.index]] || nodes[d.source.index]} ➔ ${isoNames[nodes[d.target.index]] || nodes[d.target.index]}</div>
-                    <div style="font-size:16px; font-weight:bold; margin-top:4px;">${d.source.value.toLocaleString()}</div>
+                    <div style="font-weight:bold; font-size:13px;">${getFullDisplayName(nodes[d.source.index])} ➔ ${getFullDisplayName(nodes[d.target.index])}</div>
+                    <hr style="border:0; border-top:1px solid #d0d7de; margin:8px 0;">
+                    <div style="font-size:16px; font-weight:bold;">${d.source.value.toLocaleString()}</div>
                     <div class="percentage-tag">Share: ${share.toFixed(2)}%</div>
                 `);
                 ribbons.style("opacity", r => (r === d) ? 1 : 0.05);
