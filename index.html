@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Economy Collaborators - Professional Edition</title>
+    <title>GitHub Economy Collaborators - Final Fixed</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; overflow: hidden; }
@@ -60,13 +60,14 @@
     <div id="tooltip"></div>
 
 <script>
-// 包括的な国名リスト (GitHub Innovation Graph に現れる主要コードをカバー)
+// 改訂版：特殊コード (EU, XK, BQ 等) を含む辞書
 const isoNames = {
-    "AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Namibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"
+    "AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","EU":"European Union","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Namibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","XK":"Kosovo","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"
 };
 
 const getLongName = (code) => isoNames[code] ? `${code} (${isoNames[code]})` : code;
 
+// (以下、ビジュアライゼーションロジックは前回と同様)
 const width = 850, height = 800, outerRadius = 260, innerRadius = 245;
 const svg = d3.select("#viz").append("svg").attr("width", width).attr("height", height).append("g").attr("transform", `translate(${width/2},${height/2})`);
 const tooltip = d3.select("#tooltip");
@@ -84,12 +85,9 @@ d3.csv("economy_collaborators.csv").then(data => {
         const container = d3.select("#" + containerId);
         const searchInputId = cls === "src-chk" ? "#src-search" : "#dst-search";
         const searchVal = d3.select(searchInputId).property("value").toLowerCase();
-        
         const checkedStates = new Map();
         container.selectAll("input").each(function() { checkedStates.set(this.value, this.checked); });
-        
         const sorted = [...countries].sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0) || a.localeCompare(b));
-        
         container.selectAll(".filter-item").remove();
         const items = container.selectAll(".filter-item").data(sorted).enter().append("label")
             .attr("class", "filter-item")
@@ -97,11 +95,9 @@ d3.csv("economy_collaborators.csv").then(data => {
                 const fullName = (isoNames[d] || "").toLowerCase();
                 return (d.toLowerCase().includes(searchVal) || fullName.includes(searchVal)) ? "flex" : "none";
             });
-        
         items.append("input").attr("type", "checkbox").attr("class", cls).attr("value", d => d)
-             .property("checked", d => checkedStates.has(d) ? checkedStates.get(d) : (allCountries.length < 50)) // 国が多い時は初期オフ
+             .property("checked", d => checkedStates.has(d) ? checkedStates.get(d) : (allCountries.length < 50))
              .on("change", () => { reRank(cls === "src-chk" ? "dst" : "src"); update(); });
-
         items.append("span").text(d => getLongName(d));
         items.append("span").attr("class", "val-label").text(d => scores.has(d) ? d3.format(".2s")(scores.get(d)) : "");
     }
@@ -139,36 +135,25 @@ d3.csv("economy_collaborators.csv").then(data => {
     function update() {
         svg.selectAll("*").remove();
         const [y, q] = select.property("value").split("-Q");
-        const activeSrcNodes = d3.selectAll(".src-chk:checked").nodes();
-        const activeDstNodes = d3.selectAll(".dst-chk:checked").nodes();
-        const activeSrc = new Set(activeSrcNodes.map(n => n.value));
-        const activeDst = new Set(activeDstNodes.map(n => n.value));
-
-        // 描画負荷軽減: 基本は上位120本。ただし1カ国だけ選んでる時は全部出す
+        const activeSrc = new Set(d3.selectAll(".src-chk:checked").nodes().map(n => n.value));
+        const activeDst = new Set(d3.selectAll(".dst-chk:checked").nodes().map(n => n.value));
         const limit = (activeSrc.size === 1 || activeDst.size === 1) ? 1000 : 120;
         let filtered = data.filter(d => d.year === y && d.quarter === q && activeSrc.has(d.source) && activeDst.has(d.destination))
                            .sort((a,b) => +b.weight - +a.weight).slice(0, limit);
-
         if (!filtered.length) return;
         const nodes = Array.from(new Set([...filtered.map(d => d.source), ...filtered.map(d => d.destination)])).sort();
         const idxMap = new Map(nodes.map((n, i) => [n, i]));
         const matrix = Array.from({length: nodes.length}, () => new Float64Array(nodes.length));
         filtered.forEach(d => { const s = idxMap.get(d.source), t = idxMap.get(d.destination); if (s!==undefined && t!==undefined) matrix[s][t] = +d.weight; });
-        
         const chord = d3.chordDirected().padAngle(0.04)(matrix);
         const color = d3.scaleOrdinal(d3.schemeTableau10).domain(nodes);
-
         const group = svg.append("g").selectAll("g").data(chord.groups).join("g");
-        group.append("path").attr("fill", d => color(nodes[d.index])).attr("d", d3.arc().innerRadius(innerRadius).outerRadius(outerRadius))
-             .on("mouseover", (e, d) => highlight(d.index))
-             .on("mouseout", resetHighlight);
-
+        group.append("path").attr("fill", d => color(nodes[d.index])).attr("d", d3.arc().innerRadius(innerRadius).outerRadius(outerRadius)).on("mouseover", (e, d) => highlight(d.index)).on("mouseout", resetHighlight);
         group.append("text").each(d => d.angle = (d.startAngle+d.endAngle)/2)
              .attr("class", "label").attr("transform", d => `rotate(${(d.angle*180/Math.PI-90)}) translate(${outerRadius+8}) ${d.angle>Math.PI?"rotate(180)":""}`)
              .attr("text-anchor", d => d.angle>Math.PI?"end":"start").text(d => nodes[d.index]);
-
         const ribbons = svg.append("g").selectAll("path").data(chord).join("path")
-            .attr("class", "ribbon").attr("d", d3.ribbon().radius(innerRadius)).attr("fill", d => color(nodes[d.source.index])).attr("fill-opacity", 0.6)
+            .attr("d", d3.ribbon().radius(innerRadius)).attr("fill", d => color(nodes[d.source.index])).attr("fill-opacity", 0.6)
             .attr("stroke", d => d3.rgb(color(nodes[d.source.index])).darker())
             .on("mouseover", (e, d) => {
                 tooltip.style("visibility", "visible").html(`
@@ -181,10 +166,7 @@ d3.csv("economy_collaborators.csv").then(data => {
             })
             .on("mousemove", e => tooltip.style("top", (e.pageY-10)+"px").style("left", (e.pageX+15)+"px"))
             .on("mouseout", () => { tooltip.style("visibility", "hidden"); resetHighlight(); });
-
-        function highlight(index) {
-            ribbons.style("opacity", d => (d.source.index === index || d.target.index === index) ? 1 : 0.05);
-        }
+        function highlight(index) { ribbons.style("opacity", d => (d.source.index === index || d.target.index === index) ? 1 : 0.05); }
         function resetHighlight() { ribbons.style("opacity", 1); }
     }
     update();
