@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>GitHub Economy Collaborators - Final with Notes</title>
+    <title>GitHub Economy Collaborators - Rank Synced</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; height: 100vh; background: #fff; overflow: hidden; }
@@ -15,21 +15,16 @@
         .search-input { width: 100%; box-sizing: border-box; padding: 6px 10px; font-size: 12px; border: 1px solid #d0d7de; border-radius: 6px; }
         .filter-list { flex-grow: 1; overflow-y: auto; padding: 5px; background: #fff; }
         #main { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px; overflow-y: auto; }
-        
-        /* ヘッダー・注記スタイル */
         .chart-title { margin-bottom: 5px; color: #1f2328; font-size: 22px; font-weight: 600; }
-        .sub-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; gap: 4px; }
-        .sub-header-link { font-size: 13px; }
-        .sub-header-link a { color: #0969da; text-decoration: none; font-weight: 500; }
-        .data-note { font-size: 11px; color: #57606a; background: #fff8c5; padding: 2px 8px; border-radius: 4px; border: 1px solid #d4a72c33; }
-
+        .sub-header-link { margin-bottom: 15px; font-size: 13px; }
+        .sub-header-link a { color: #0969da; text-decoration: none; }
         .filter-item { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 4px; cursor: pointer; color: #24292f; }
+        .filter-item:hover { background: #f6f8fa; }
         .val-label { color: #8c959f; font-size: 10px; margin-left: auto; font-family: monospace; }
-        .aggregate-tag { font-size: 9px; color: #0969da; border: 1px solid #0969da; padding: 0 3px; border-radius: 3px; margin-left: 4px; font-weight: bold; }
-
         #tooltip { position: absolute; visibility: hidden; background: rgba(255,255,255,0.98); border: 1px solid #d0d7de; padding: 12px; border-radius: 8px; font-size: 12px; z-index: 100; pointer-events: none; box-shadow: 0 8px 24px rgba(140,149,159,0.2); line-height: 1.4; }
         .label { font-size: 10px; fill: #57606a; font-weight: 600; pointer-events: none; }
-        button { cursor: pointer; padding: 3px 8px; font-size: 11px; border: 1px solid #d0d7de; background: #fff; border-radius: 6px; font-weight: 500; }
+        button { cursor: pointer; padding: 3px 6px; font-size: 10px; border: 1px solid #d0d7de; background: #fff; border-radius: 6px; font-weight: 500; color: #24292f; }
+        button:hover { background: #f6f8fa; border-color: #1f2328; }
         select { width: 100%; font-size: 13px; padding: 6px; border-radius: 6px; border: 1px solid #d0d7de; background: #fff; }
         .percentage-tag { display: inline-block; background: #dafbe1; color: #1a7f37; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 4px; }
     </style>
@@ -44,13 +39,21 @@
             <div class="column">
                 <div class="column-label">Source (From)</div>
                 <div class="search-container"><input type="text" id="src-search" class="search-input" placeholder="Search..." oninput="handleSearch('src')"></div>
-                <div style="padding:6px; display:flex; gap:4px;"><button onclick="toggleVisible('src',true)">All</button><button onclick="toggleVisible('src',false)">None</button></div>
+                <div style="padding:6px; display:flex; gap:3px;">
+                    <button onclick="toggleVisible('src',true)">All</button>
+                    <button onclick="smartSelectTop15('src')">Top 15</button>
+                    <button onclick="toggleVisible('src',false)">Clear</button>
+                </div>
                 <div id="src-filters" class="filter-list"></div>
             </div>
             <div class="column">
                 <div class="column-label">Destination (To)</div>
                 <div class="search-container"><input type="text" id="dst-search" class="search-input" placeholder="Search..." oninput="handleSearch('dst')"></div>
-                <div style="padding:6px; display:flex; gap:4px;"><button onclick="toggleVisible('dst',true)">All</button><button onclick="toggleVisible('dst',false)">None</button></div>
+                <div style="padding:6px; display:flex; gap:3px;">
+                    <button onclick="toggleVisible('dst',true)">All</button>
+                    <button onclick="smartSelectTop15('dst')">Top 15</button>
+                    <button onclick="toggleVisible('dst',false)">Clear</button>
+                </div>
                 <div id="dst-filters" class="filter-list"></div>
             </div>
         </div>
@@ -58,25 +61,17 @@
 
     <div id="main">
         <h1 class="chart-title">GitHub Economy Collaborators (Customized)</h1>
-        <div class="sub-header">
-            <div class="sub-header-link">
-                <a href="https://github.com/maabou512/github_economy_collaborators" target="_blank">GitHub Repo and README (Japanese)</a>
-            </div>
-            <div class="data-note">
-                ※ "EU" represents the aggregate value of EU member states.
-            </div>
+        <div class="sub-header-link">
+            <a href="https://github.com/maabou512/github_economy_collaborators" target="_blank">GitHub Repo and README (Japanese)</a>
         </div>
         <div id="viz"></div>
     </div>
     <div id="tooltip"></div>
 
 <script>
-const isoNames = {
-    "AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","EU":"European Union","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Nomibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","XK":"Kosovo","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"
-};
-
+// (isoNames, getLongName, SVG設定などは維持)
+const isoNames = {"AD":"Andorra","AE":"United Arab Emirates","AF":"Afghanistan","AG":"Antigua and Barbuda","AI":"Anguilla","AL":"Albania","AM":"Armenia","AO":"Angola","AQ":"Antarctica","AR":"Argentina","AS":"American Samoa","AT":"Austria","AU":"Australia","AW":"Aruba","AX":"Aland Islands","AZ":"Azerbaijan","BA":"Bosnia and Herzegovina","BB":"Barbados","BD":"Bangladesh","BE":"Belgium","BF":"Burkina Faso","BG":"Bulgaria","BH":"Bahrain","BI":"Burundi","BJ":"Benin","BM":"Bermuda","BN":"Brunei","BO":"Bolivia","BQ":"Bonaire, Sint Eustatius and Saba","BR":"Brazil","BS":"Bahamas","BT":"Bhutan","BW":"Botswana","BY":"Belarus","BZ":"Belize","CA":"Canada","CC":"Cocos Islands","CD":"Congo (DRC)","CF":"Central African Republic","CG":"Congo (Republic)","CH":"Switzerland","CI":"Cote d'Ivoire","CK":"Cook Islands","CL":"Chile","CM":"Cameroon","CN":"China","CO":"Colombia","CR":"Costa Rica","CU":"Cuba","CV":"Cape Verde","CW":"Curacao","CX":"Christmas Island","CY":"Cyprus","CZ":"Czech Republic","DE":"Germany","DJ":"Djibouti","DK":"Denmark","DM":"Dominica","DO":"Dominican Republic","DZ":"Algeria","EC":"Ecuador","EE":"Estonia","EG":"Egypt","ER":"Eritrea","ES":"Spain","ET":"Ethiopia","EU":"European Union","FI":"Finland","FJ":"Fiji","FK":"Falkland Islands","FM":"Micronesia","FO":"Faroe Islands","FR":"France","GA":"Gabon","GB":"United Kingdom","GD":"Grenada","GE":"Georgia","GF":"French Guiana","GG":"Guernsey","GH":"Ghana","GI":"Gibraltar","GL":"Greenland","GM":"Gambia","GN":"Guinea","GP":"Guadeloupe","GQ":"Equatorial Guinea","GR":"Greece","GS":"South Georgia","GT":"Guatemala","GU":"Guam","GW":"Guinea-Bissau","GY":"Guyana","HK":"Hong Kong","HM":"Heard Island","HN":"Honduras","HR":"Croatia","HT":"Haiti","HU":"Hungary","ID":"Indonesia","IE":"Ireland","IL":"Israel","IM":"Isle of Man","IN":"India","IO":"British Indian Ocean Territory","IQ":"Iraq","IR":"Iran","IS":"Iceland","IT":"Italy","JE":"Jersey","JM":"Jamaica","JO":"Jordan","JP":"Japan","KE":"Kenya","KG":"Kyrgyzstan","KH":"Cambodia","KI":"Kiribati","KM":"Comoros","KN":"Saint Kitts and Nevis","KP":"North Korea","KR":"South Korea","KW":"Kuwait","KY":"Cayman Islands","KZ":"Kazakhstan","LA":"Laos","LB":"Lebanon","LC":"Saint Lucia","LI":"Liechtenstein","LK":"Sri Lanka","LR":"Liberia","LS":"Lesotho","LT":"Lithuania","LU":"Luxembourg","LV":"Latvia","LY":"Libya","MA":"Morocco","MC":"Monaco","MD":"Moldova","ME":"Montenegro","MF":"Saint Martin","MG":"Madagascar","MH":"Marshall Islands","MK":"North Macedonia","ML":"Mali","MM":"Myanmar","MN":"Mongolia","MO":"Macau","MP":"Northern Mariana Islands","MQ":"Martinique","MR":"Mauritania","MS":"Montserrat","MT":"Malta","MU":"Mauritius","MV":"Maldives","MW":"Malawi","MX":"Mexico","MY":"Malaysia","MZ":"Mozambique","NA":"Namibia","NC":"New Caledonia","NE":"Niger","NF":"Norfolk Island","NG":"Nigeria","NI":"Nicaragua","NL":"Netherlands","NO":"Norway","NP":"Nepal","NR":"Nauru","NU":"Niue","NZ":"New Zealand","OM":"Oman","PA":"Panama","PE":"Peru","PF":"French Polynesia","PG":"Papua New Guinea","PH":"Philippines","PK":"Pakistan","PL":"Poland","PM":"Saint Pierre and Miquelon","PN":"Pitcairn Islands","PR":"Puerto Rico","PS":"Palestine","PT":"Portugal","PW":"Palau","PY":"Paraguay","QA":"Qatar","RE":"Reunion","RO":"Romania","RS":"Serbia","RU":"Russia","RW":"Rwanda","SA":"Saudi Arabia","SB":"Solomon Islands","SC":"Seychelles","SD":"Sudan","SE":"Sweden","SG":"Singapore","SH":"Saint Helena","SI":"Slovenia","SJ":"Svalbard and Jan Mayen","SK":"Slovakia","SL":"Sierra Leone","SM":"San Marino","SN":"Senegal","SO":"Somalia","SR":"Suriname","SS":"South Sudan","ST":"Sao Tome and Principe","SV":"El Salvador","SX":"Sint Maarten","SY":"Syria","SZ":"Eswatini","TC":"Turks and Caicos","TD":"Chad","TF":"French Southern Territories","TG":"Togo","TH":"Thailand","TJ":"Tajikistan","TK":"Tokelau","TL":"Timor-Leste","TM":"Turkmenistan","TN":"Tunisia","TO":"Tonga","TR":"Turkey","TT":"Trinidad and Tobago","TV":"Tuvalu","TW":"Taiwan","TZ":"Tanzania","UA":"Ukraine","UG":"Uganda","UM":"US Outlying Islands","US":"United States","UY":"Uruguay","UZ":"Uzbekistan","VA":"Vatican City","VC":"Saint Vincent","VE":"Venezuela","VG":"Virgin Islands (British)","VI":"Virgin Islands (US)","VN":"Vietnam","VU":"Vanuatu","WF":"Wallis and Futuna","WS":"Samoa","XK":"Kosovo","YE":"Yemen","YT":"Mayotte","ZA":"South Africa","ZM":"Zambia","ZW":"Zimbabwe"};
 const getLongName = (code) => isoNames[code] ? `${code} (${isoNames[code]})` : code;
-
 const width = 850, height = 800, outerRadius = 260, innerRadius = 245;
 const svg = d3.select("#viz").append("svg").attr("width", width).attr("height", height).append("g").attr("transform", `translate(${width/2},${height/2})`);
 const tooltip = d3.select("#tooltip");
@@ -87,40 +82,82 @@ d3.csv("economy_collaborators.csv").then(data => {
     const select = d3.select("#period-select");
     select.selectAll("option").data(periods).enter().append("option").text(d => d);
 
-    renderFilters("src-filters", allCountries, "src-chk");
-    renderFilters("dst-filters", allCountries, "dst-chk");
-
-    function renderFilters(containerId, countries, cls, scores = new Map()) {
-        const container = d3.select("#" + containerId);
-        const searchInputId = cls === "src-chk" ? "#src-search" : "#dst-search";
-        const searchVal = d3.select(searchInputId).property("value").toLowerCase();
-        const checkedStates = new Map();
-        container.selectAll("input").each(function() { checkedStates.set(this.value, this.checked); });
-        const sorted = [...countries].sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0) || a.localeCompare(b));
-        container.selectAll(".filter-item").remove();
+    // ★ 現在選択されている相手側に基づく上位コードを返す
+    function getRankedCodes(type, periodStr, oppositeActiveSet) {
+        const [y, q] = periodStr.split("-Q");
+        let filtered = data.filter(d => d.year === y && d.quarter === q);
         
+        // 相手側が選択されていれば絞り込む
+        if (oppositeActiveSet && oppositeActiveSet.size > 0) {
+            filtered = filtered.filter(d => type === 'src' ? oppositeActiveSet.has(d.destination) : oppositeActiveSet.has(d.source));
+        }
+
+        const scores = d3.rollup(filtered, v => d3.sum(v, d => +d.weight), d => (type === 'src' ? d.source : d.destination));
+        return scores;
+    }
+
+    function renderFilters(type, forceSelectCodes = null) {
+        const containerId = type + "-filters";
+        const cls = type + "-chk";
+        const oppositeType = type === 'src' ? 'dst' : 'src';
+        const periodStr = select.property("value");
+        
+        // 相手方の現在の選択状況を取得
+        const oppositeActiveSet = new Set(d3.selectAll(`.${oppositeType}-chk:checked`).nodes().map(n => n.value));
+        const scores = getRankedCodes(type, periodStr, oppositeActiveSet);
+        
+        // 現状のチェック状態を退避
+        const currentChecked = new Set(d3.selectAll(`.${cls}:checked`).nodes().map(n => n.value));
+
+        const container = d3.select("#" + containerId);
+        const searchVal = d3.select(`#${type}-search`).property("value").toLowerCase();
+        
+        const sorted = [...allCountries].sort((a, b) => (scores.get(b) || 0) - (scores.get(a) || 0) || a.localeCompare(b));
+        
+        container.selectAll(".filter-item").remove();
         const items = container.selectAll(".filter-item").data(sorted).enter().append("label")
             .attr("class", "filter-item")
             .style("display", d => {
                 const fullName = (isoNames[d] || "").toLowerCase();
                 return (d.toLowerCase().includes(searchVal) || fullName.includes(searchVal)) ? "flex" : "none";
             });
-        
-        items.append("input").attr("type", "checkbox").attr("class", cls).attr("value", d => d)
-             .property("checked", d => checkedStates.has(d) ? checkedStates.get(d) : (allCountries.length < 50))
-             .on("change", () => { reRank(cls === "src-chk" ? "dst" : "src"); update(); });
-        
-        items.append("span").text(d => getLongName(d));
-        
-        // EUの場合に特別なタグを付ける
-        items.each(function(d) {
-            if(d === "EU") {
-                d3.select(this).append("span").attr("class", "aggregate-tag").attr("title", "Aggregate value of member states").text("AGG");
-            }
-        });
 
+        items.append("input").attr("type", "checkbox").attr("class", cls).attr("value", d => d)
+             .property("checked", d => {
+                 if (forceSelectCodes) return forceSelectCodes.includes(d);
+                 return currentChecked.has(d);
+             })
+             .on("change", () => {
+                 // 自分が変わったら相手のランキングを更新
+                 renderFilters(oppositeType);
+                 updateChart();
+             });
+
+        items.append("span").text(d => getLongName(d));
         items.append("span").attr("class", "val-label").text(d => scores.has(d) ? d3.format(".2s")(scores.get(d)) : "");
     }
+
+    // ★ Top 15ボタン
+    window.smartSelectTop15 = (type) => {
+        const periodStr = select.property("value");
+        const oppositeType = type === 'src' ? 'dst' : 'src';
+        const oppositeActiveSet = new Set(d3.selectAll(`.${oppositeType}-chk:checked`).nodes().map(n => n.value));
+        
+        const scores = getRankedCodes(type, periodStr, oppositeActiveSet);
+        const top15 = Array.from(scores.entries()).sort((a,b)=>b[1]-a[1]).slice(0, 15).map(d=>d[0]);
+        
+        renderFilters(type, top15);
+        renderFilters(oppositeType); // 相手のスコアも再計算
+        updateChart();
+    };
+
+    window.toggleVisible = (type, state) => {
+        d3.select(`#${type}-filters`).selectAll(".filter-item").filter(function() {
+            return d3.select(this).style("display") !== "none";
+        }).select("input").property("checked", state);
+        renderFilters(type === 'src' ? 'dst' : 'src');
+        updateChart();
+    };
 
     window.handleSearch = (type) => {
         const query = d3.select(`#${type}-search`).property("value").toLowerCase();
@@ -130,41 +167,32 @@ d3.csv("economy_collaborators.csv").then(data => {
         });
     };
 
-    window.toggleVisible = (type, state) => {
-        d3.select(`#${type}-filters`).selectAll(".filter-item").filter(function() {
-            return d3.select(this).style("display") !== "none";
-        }).select("input").property("checked", state);
-        reRank(type === 'src' ? "dst" : "src"); update();
-    };
+    select.on("change", () => {
+        renderFilters('src');
+        renderFilters('dst');
+        updateChart();
+    });
 
-    function reRank(target) {
-        const [y, q] = select.property("value").split("-Q");
-        const activeSrc = d3.selectAll(".src-chk:checked").nodes().map(n => n.value);
-        const activeDst = d3.selectAll(".dst-chk:checked").nodes().map(n => n.value);
-        if (target === "dst") {
-            const scores = d3.rollup(data.filter(d => d.year === y && d.quarter === q && activeSrc.includes(d.source)), v => d3.sum(v, d => +d.weight), d => d.destination);
-            renderFilters("dst-filters", allCountries, "dst-chk", scores);
-        } else {
-            const scores = d3.rollup(data.filter(d => d.year === y && d.quarter === q && activeDst.includes(d.destination)), v => d3.sum(v, d => +d.weight), d => d.source);
-            renderFilters("src-filters", allCountries, "src-chk", scores);
-        }
-    }
+    // 初回起動：全体Top15をセット
+    const [y, q] = periods[0].split("-Q");
+    const initialScores = d3.rollup(data.filter(d => d.year === y && d.quarter === q), v => d3.sum(v, d => +d.weight), d => d.source);
+    const initialTop15 = Array.from(initialScores.entries()).sort((a,b)=>b[1]-a[1]).slice(0, 15).map(d=>d[0]);
+    
+    renderFilters('src', initialTop15);
+    renderFilters('dst', initialTop15);
+    updateChart();
 
-    select.on("change", () => { reRank("src"); reRank("dst"); update(); });
-
-    function update() {
+    function updateChart() {
         svg.selectAll("*").remove();
         const [y, q] = select.property("value").split("-Q");
         const activeSrc = new Set(d3.selectAll(".src-chk:checked").nodes().map(n => n.value));
         const activeDst = new Set(d3.selectAll(".dst-chk:checked").nodes().map(n => n.value));
         
-        const limit = (activeSrc.size === 1 || activeDst.size === 1) ? 1000 : 120;
         let filtered = data.filter(d => d.year === y && d.quarter === q && activeSrc.has(d.source) && activeDst.has(d.destination))
-                           .sort((a,b) => +b.weight - +a.weight).slice(0, limit);
+                           .sort((a,b) => +b.weight - +a.weight).slice(0, 120);
 
         if (!filtered.length) return;
         const totalWeight = d3.sum(filtered, d => +d.weight);
-
         const nodes = Array.from(new Set([...filtered.map(d => d.source), ...filtered.map(d => d.destination)])).sort();
         const idxMap = new Map(nodes.map((n, i) => [n, i]));
         const matrix = Array.from({length: nodes.length}, () => new Float64Array(nodes.length));
@@ -172,39 +200,26 @@ d3.csv("economy_collaborators.csv").then(data => {
         
         const chord = d3.chordDirected().padAngle(0.04)(matrix);
         const color = d3.scaleOrdinal(d3.schemeTableau10).domain(nodes);
-
         const group = svg.append("g").selectAll("g").data(chord.groups).join("g");
-        group.append("path").attr("fill", d => color(nodes[d.index])).attr("d", d3.arc().innerRadius(innerRadius).outerRadius(outerRadius)).on("mouseover", (e, d) => highlight(d.index)).on("mouseout", resetHighlight);
-        
+        group.append("path").attr("fill", d => color(nodes[d.index])).attr("d", d3.arc().innerRadius(innerRadius).outerRadius(outerRadius));
         group.append("text").each(d => d.angle = (d.startAngle+d.endAngle)/2)
              .attr("class", "label").attr("transform", d => `rotate(${(d.angle*180/Math.PI-90)}) translate(${outerRadius+8}) ${d.angle>Math.PI?"rotate(180)":""}`)
              .attr("text-anchor", d => d.angle>Math.PI?"end":"start").text(d => nodes[d.index]);
-
         const ribbons = svg.append("g").selectAll("path").data(chord).join("path")
             .attr("d", d3.ribbon().radius(innerRadius)).attr("fill", d => color(nodes[d.source.index])).attr("fill-opacity", 0.6)
             .attr("stroke", d => d3.rgb(color(nodes[d.source.index])).darker())
             .on("mouseover", (e, d) => {
                 const share = (d.source.value / totalWeight) * 100;
-                const srcName = isoNames[nodes[d.source.index]] || nodes[d.source.index];
-                const dstName = isoNames[nodes[d.target.index]] || nodes[d.target.index];
-                
                 tooltip.style("visibility", "visible").html(`
-                    <div style="font-weight:bold; font-size:13px;">${srcName} ➔ ${dstName}</div>
-                    <hr style="border:0; border-top:1px solid #d0d7de; margin:8px 0;">
-                    <div style="color:#666; font-size:11px;">Collaboration Value</div>
-                    <div style="font-size:16px; font-weight:bold;">${d.source.value.toLocaleString()}</div>
+                    <div style="font-weight:bold;">${isoNames[nodes[d.source.index]] || nodes[d.source.index]} ➔ ${isoNames[nodes[d.target.index]] || nodes[d.target.index]}</div>
+                    <div style="font-size:16px; font-weight:bold; margin-top:4px;">${d.source.value.toLocaleString()}</div>
                     <div class="percentage-tag">Share: ${share.toFixed(2)}%</div>
-                    ${(nodes[d.source.index]==="EU" || nodes[d.target.index]==="EU") ? '<div style="font-size:9px; color:#c59000; margin-top:5px;">* Includes aggregate EU data</div>' : ''}
                 `);
                 ribbons.style("opacity", r => (r === d) ? 1 : 0.05);
             })
             .on("mousemove", e => tooltip.style("top", (e.pageY-10)+"px").style("left", (e.pageX+15)+"px"))
-            .on("mouseout", () => { tooltip.style("visibility", "hidden"); resetHighlight(); });
-
-        function highlight(index) { ribbons.style("opacity", d => (d.source.index === index || d.target.index === index) ? 1 : 0.05); }
-        function resetHighlight() { ribbons.style("opacity", 1); }
+            .on("mouseout", () => { tooltip.style("visibility", "hidden"); ribbons.style("opacity", 1); });
     }
-    update();
 });
 </script>
 </body>
